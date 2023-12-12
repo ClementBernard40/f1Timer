@@ -76,17 +76,30 @@ exports.deleteAUser = async (req,res) => {
 
 
 
-exports.updateAUser = async (req,res) => {
-    const userUpdate = new User(req.body)
+exports.updateAUser = async (req, res) => {
+    try {
+        const userUpdate = req.body;
 
-        try {
-            const user = await User.findByIdAndUpdate(req.params.id_users, {email: userUpdate.email, password: userUpdate.password, role: userUpdate.role});
-            res.status(203);
-            res.json(user);
-        } catch (error) {
-            res.status(500);
-            console.log(error);
-            res.json({message: "Erreur serveur."});
+        // Si le mot de passe est présent dans la mise à jour go le hasher
+        if (userUpdate.password) {
+            const salt = await bcrypt.genSalt(10);
+            userUpdate.password = await bcrypt.hash(userUpdate.password, salt);
         }
-    
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id_users,
+            { $set: userUpdate },
+            { new: true } // Retourne le document modifié
+        );
+
+        if (!user) {
+            res.status(404).json({ message: 'Utilisateur non trouvé' });
+            return;
+        }
+
+        res.status(203).json(user);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Erreur serveur.' });
     }
+};

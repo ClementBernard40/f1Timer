@@ -14,7 +14,7 @@ router
 
 router 
     .route("/:id_users")
-        .delete(/*jwtMiddleware.verifyToken,*/userController.deleteAUser)
+        .delete(jwtMiddleware.verifyToken,userController.deleteAUser)
         .put(jwtMiddleware.verifyToken,userController.updateAUser)
 
 
