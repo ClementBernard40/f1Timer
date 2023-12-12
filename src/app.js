@@ -11,11 +11,11 @@ app.use(express.json());
 
 
 // const postRoute = require('./routes/postRoute');
-// const commentRoute = require('./routes/commentRoute');
+const timerRoute = require('./routes/timerRoute');
 const userRoute = require('./routes/userRoute');
 
 // app.use('/posts', postRoute);
-// app.use('/', commentRoute);
+app.use('/', timerRoute);
 app.use('/users', userRoute);
 
 

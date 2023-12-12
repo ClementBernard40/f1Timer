@@ -1,18 +1,14 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
-let userSchema = new Schema ({
-    email: {
+let timerSchema = new Schema ({
+    users_id: {
         type: String,
         required: true,
-        unique: true
     },
-    password:  {
-        type: String,
+    time:  {
+        type: Number,
         required: true
-    },
-    role: {
-        type: Boolean
     },
     created_at: {
         type: Date,
@@ -20,4 +16,4 @@ let userSchema = new Schema ({
     }
 });
 
-module.exports = mongoose.model('User', userSchema);
+module.exports = mongoose.model('Timer', timerSchema);
