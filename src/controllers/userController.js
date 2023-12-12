@@ -1,21 +1,34 @@
-const User = require('../models/userModel');
-const jwt = require('jsonwebtoken');
 // require('dotenv').config;
 // console.log(process.env.JWT_KEY);
-JWT_KEY='sdcvhjgvgfdjsbhbjkdhsgvhsvdfdsfbdhvcnbvfdbvfdvcfxxjvkfd'
+const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
+const JWT_KEY = 'sdcvhjgvgfdjsbhbjkdhsgvhsvdfdsfbdhvcnbvfdbvfdvcfxxjvkfd';
+const saltRounds = 10;
 
 exports.userRegister = async (req, res) => {
     try {
         let newUser = new User(req.body);
+        let userPwd = newUser.password;
+        console.log(userPwd);
+
+        let salt = await bcrypt.genSalt(saltRounds);
+        console.log('Salt: ', salt);
+
+        let hash = await bcrypt.hash(userPwd, salt);
+        console.log('Hash: ', hash);
+
+        newUser.password = hash;
+
         let user = await newUser.save();
-        res.status(201).json({ message: `User créé: ${user.email}` });        
-    } 
-    catch (error) {
-        console.log(error);
-        res.status(401).json({message: 'Requete invalide'});
+        res.status(201).json({ message: `User créé: ${user.email}` });
+    } catch (error) {
+        console.error(error);
+        res.status(401).json({ message: 'Requête invalide' });
     }
 };
+
 
 exports.userLogin = async (req, res) => {
     try {
