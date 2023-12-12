@@ -1,46 +1,64 @@
-const User = require('../models/userModel');
-const jwt = require('jsonwebtoken');
 // require('dotenv').config;
 // console.log(process.env.JWT_KEY);
-JWT_KEY='sdcvhjgvgfdjsbhbjkdhsgvhsvdfdsfbdhvcnbvfdbvfdvcfxxjvkfd'
+const User = require('../models/userModel');
+const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 
+const JWT_KEY = 'sdcvhjgvgfdjsbhbjkdhsgvhsvdfdsfbdhvcnbvfdbvfdvcfxxjvkfd';
+const saltRounds = 10;
 
 exports.userRegister = async (req, res) => {
     try {
         let newUser = new User(req.body);
+        let userPwd = newUser.password;
+        console.log(userPwd);
+
+        let salt = await bcrypt.genSalt(saltRounds);
+        console.log('Salt: ', salt);
+
+        let hash = await bcrypt.hash(userPwd, salt);
+        console.log('Hash: ', hash);
+
+        newUser.password = hash;
+
         let user = await newUser.save();
-        res.status(201).json({ message: `User créé: ${user.email}` });        
-    } 
-    catch (error) {
-        console.log(error);
-        res.status(401).json({message: 'Requete invalide'});
+        res.status(201).json({ message: `User créé: ${user.email}` });
+    } catch (error) {
+        console.error(error);
+        res.status(401).json({ message: 'Requête invalide' });
     }
 };
 
+
 exports.userLogin = async (req, res) => {
     try {
-        const user = await User.findOne({email: req.body.email});
-        if(!user) {
-            res.status(500).json({message: 'Utilisateur non trouvé'});
+        const user = await User.findOne({ email: req.body.email });
+
+        if (!user) {
+            res.status(500).json({ message: 'Utilisateur non trouvé' });
             return;
         }
-        if(user.email === req.body.email && user.password === req.body.password) {
+
+        const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+
+        if (passwordMatch) {
             const userData = {
                 id: user._id,
                 email: user.email,
                 role: 'admin'
             };
-            const token = await jwt.sign(userData, JWT_KEY, {expiresIn: "10h"});
-            res.status(200).json({token});
-            }
-        else {
-            res.status(401).json({message: "Email ou mot de passe incorrect."});
+
+            const token = await jwt.sign(userData, JWT_KEY, { expiresIn: '10h' });
+            res.status(200).json({ token });
+        } else {
+            res.status(401).json({ message: 'Email ou mot de passe incorrect.' });
         }
     } catch (error) {
-        console.log(error);
-        res.status(500).json({message: "Une erreur s'est produite lors du traitement."})
+        console.error(error);
+        res.status(500).json({ message: 'Une erreur s\'est produite lors du traitement.' });
     }
 };
+
 
 
 exports.deleteAUser = async (req,res) => {
@@ -58,17 +76,30 @@ exports.deleteAUser = async (req,res) => {
 
 
 
-exports.updateAUser = async (req,res) => {
-    const userUpdate = new User(req.body)
+exports.updateAUser = async (req, res) => {
+    try {
+        const userUpdate = req.body;
 
-        try {
-            const user = await User.findByIdAndUpdate(req.params.id_users, {email: userUpdate.email, password: userUpdate.password, role: userUpdate.role});
-            res.status(203);
-            res.json(user);
-        } catch (error) {
-            res.status(500);
-            console.log(error);
-            res.json({message: "Erreur serveur."});
+        // Si le mot de passe est présent dans la mise à jour go le hasher
+        if (userUpdate.password) {
+            const salt = await bcrypt.genSalt(10);
+            userUpdate.password = await bcrypt.hash(userUpdate.password, salt);
         }
-    
+
+        const user = await User.findByIdAndUpdate(
+            req.params.id_users,
+            { $set: userUpdate },
+            { new: true } // Retourne le document modifié
+        );
+
+        if (!user) {
+            res.status(404).json({ message: 'Utilisateur non trouvé' });
+            return;
+        }
+
+        res.status(203).json(user);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Erreur serveur.' });
     }
+};
