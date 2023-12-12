@@ -32,28 +32,33 @@ exports.userRegister = async (req, res) => {
 
 exports.userLogin = async (req, res) => {
     try {
-        const user = await User.findOne({email: req.body.email});
-        if(!user) {
-            res.status(500).json({message: 'Utilisateur non trouvé'});
+        const user = await User.findOne({ email: req.body.email });
+
+        if (!user) {
+            res.status(500).json({ message: 'Utilisateur non trouvé' });
             return;
         }
-        if(user.email === req.body.email && user.password === req.body.password) {
+
+        const passwordMatch = await bcrypt.compare(req.body.password, user.password);
+
+        if (passwordMatch) {
             const userData = {
                 id: user._id,
                 email: user.email,
                 role: 'admin'
             };
-            const token = await jwt.sign(userData, JWT_KEY, {expiresIn: "10h"});
-            res.status(200).json({token});
-            }
-        else {
-            res.status(401).json({message: "Email ou mot de passe incorrect."});
+
+            const token = await jwt.sign(userData, JWT_KEY, { expiresIn: '10h' });
+            res.status(200).json({ token });
+        } else {
+            res.status(401).json({ message: 'Email ou mot de passe incorrect.' });
         }
     } catch (error) {
-        console.log(error);
-        res.status(500).json({message: "Une erreur s'est produite lors du traitement."})
+        console.error(error);
+        res.status(500).json({ message: 'Une erreur s\'est produite lors du traitement.' });
     }
 };
+
 
 
 exports.deleteAUser = async (req,res) => {
