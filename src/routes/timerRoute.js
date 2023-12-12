@@ -6,7 +6,7 @@ const timerController = require('../controllers/timerController');
 
     router
         .route('/:id_users/timer')
-          //  .post(timerController.storeATimer);
+          .post(timerController.storeATimer);
 
     module.exports = router;
 
