@@ -23,3 +23,16 @@ exports.storeATimer = async (req,res) => {
         res.json({message: "Erreur serveur(utilisateur inexistant)."});
     } 
 }
+
+exports.getAllTimer = async (req,res) => {
+
+    try {
+        const timers = await Timer.find({users_id: req.params.id_users});
+        res.status(200);
+        res.json(timers);
+    } catch (error) {
+        res.status(500);
+        console.log(error);
+        res.json({message: "Erreur serveur."});
+    }
+}
