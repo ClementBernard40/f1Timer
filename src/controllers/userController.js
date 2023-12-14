@@ -1,23 +1,19 @@
-// require('dotenv').config;
+require('dotenv').config;
 // console.log(process.env.JWT_KEY);
 const User = require('../models/userModel');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 
-const JWT_KEY = 'sdcvhjgvgfdjsbhbjkdhsgvhsvdfdsfbdhvcnbvfdbvfdvcfxxjvkfd';
 const saltRounds = 10;
 
 exports.userRegister = async (req, res) => {
     try {
         let newUser = new User(req.body);
         let userPwd = newUser.password;
-        console.log(userPwd);
 
         let salt = await bcrypt.genSalt(saltRounds);
-        console.log('Salt: ', salt);
 
         let hash = await bcrypt.hash(userPwd, salt);
-        console.log('Hash: ', hash);
 
         newUser.password = hash;
 
@@ -47,8 +43,10 @@ exports.userLogin = async (req, res) => {
                 email: user.email,
                 role: 'admin'
             };
+            
+            console.log(process.env.JWT_KEY)
 
-            const token = await jwt.sign(userData, JWT_KEY, { expiresIn: '10h' });
+            const token = await jwt.sign(userData, process.env.JWT_KEY, { expiresIn: '10h' });
             res.status(200).json({ token });
         } else {
             res.status(401).json({ message: 'Email ou mot de passe incorrect.' });

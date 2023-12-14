@@ -1,15 +1,16 @@
 const jwt = require('jsonwebtoken');
-// const jwtKey = process.env.JWT_KEY;
-// require('dotenv').config
-JWT_KEY='sdcvhjgvgfdjsbhbjkdhsgvhsvdfdsfbdhvcnbvfdbvfdvcfxxjvkfd'
+require('dotenv').config()
+const jwtKey = process.env.JWT_KEY;
+
 
 
 exports.verifyToken = async (req, res, next) => {
     try {
-        const token = req.header['authorization'];
+        const token = req.headers['authorization'];
+        console.log(token)
         if (token !== undefined) {
             const payload = await new Promise((resolve, reject) => {
-                jwt.verify(token, JWT_KEY, (error, decoded) => {
+                jwt.verify(token, jwtKey, (error, decoded) => {
                     if (error) {
                         reject(error)
                     } else {
